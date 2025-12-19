@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, Trophy, Volume2, VolumeX, RefreshCw, Loader2, Moon, Sun } from 'lucide-react';
+import { Star, Trophy, Volume2, VolumeX, RefreshCw, Loader2, Moon, Sun, AlertCircle } from 'lucide-react';
 
 // Eenvoudige geluidseffecten URLs
 const SOUNDS = {
@@ -10,79 +10,194 @@ const SOUNDS = {
 };
 
 // Vaste lijst met woorden voor Groep 3
-// Inclusief korte/lange klinkers en tweeklanken (oe, au, etc.)
 const WOORDEN_LIJST = [
   // Korte klinkers (a, e, i, o, u)
   "bal", "kam", "pan", "jas", "tas", "kat", "bad", "tak", "zak", "mat",
+  "bak", "lak", "pak", "dal", "knal", "smal", "dam", "ham", "ram", "man",
+  "kan", "van", "kas", "pas", "was", "das", "nat", "rat", "vat", "lat",
+  
   "pen", "mes", "nek", "bel", "pet", "bed", "hek", "zes", "weg", "hem",
+  "fles", "bes", "les", "bek", "dek", "gek", "lek", "vlek", "stek", "vel",
+  "spel", "stel", "snel", "red", "pret", "wet", "net", "zet", "elf", "kelk",
+
   "vis", "pil", "kin", "lip", "kip", "wit", "dik", "ik", "in", "is",
+  "mis", "sis", "wis", "fris", "wip", "stip", "knip", "sik", "hik", "mik",
+  "stik", "zin", "min", "pin", "spin", "bil", "bril", "wil", "gil", "stil", "kist", "mist",
+  
   "pop", "rok", "sok", "top", "bos", "mond", "wol", "pot", "hok", "vos",
+  "rot", "bot", "mot", "zot", "slot", "bok", "kok", "wolk", "brok", "klok",
+  "mos", "ros", "kop", "mop", "sop", "drop", "klop", "kom", "dom", "bom", "stom", "romp",
+
   "bus", "hut", "kus", "mus", "put", "rug", "mug", "dun", "juf", "nul",
+  "lus", "zus", "blus", "plus", "nut", "brug", "vlug", "kun", "gun", "pun",
+  "krul", "smul", "knus", "kruk", "druk", "stuk", "geluk", "lucht", "kust", "rust",
   
   // Lange klinkers (aa, ee, oo, uu)
   "maan", "raam", "kaas", "zaag", "haas", "baas", "taart", "kaart", "schaap",
-  "been", "teen", "zeep", "mee", "zee", "veel", "neef", "feest", "geel",
-  "boom", "roos", "oog", "boot", "noot", "rood", "groot", "hoofd", "zoon",
-  "vuur", "muur", "uur", "huur", "duur", "stuur", "buur", "schuur",
+  "haan", "baan", "laan", "gaan", "staan", "waan", "kraan", "zwaan", "raap",
+  "gaap", "slaap", "aap", "laat", "maat", "gaat", "zaad", "draad", "kwaad", "naast",
   
-  // Tweeklanken (oe, ie, eu, ui, ei, ij, ou, au)
+  "been", "teen", "zeep", "mee", "zee", "veel", "neef", "feest", "geel",
+  "steen", "geen", "leen", "heen", "speen", "twee", "nee", "ree", "fee", "vee",
+  "keel", "heel", "deel", "meel", "leef", "geef", "weef", "reef", "beek", "week",
+
+  "boom", "roos", "oog", "boot", "noot", "rood", "groot", "hoofd", "zoon",
+  "oom", "stoom", "droom", "room", "loop", "hoop", "doop", "knoop", "koop",
+  "boos", "doos", "loos", "kroos", "boog", "hoog", "droog", "poog", "poot",
+  "stoot", "goot", "vloot", "kroon", "loon", "woon", "boon", "toon", "oor",
+  
+  "vuur", "muur", "uur", "huur", "duur", "stuur", "buur", "schuur",
+  "zuur", "puur", "guur", "kuur",
+  
+  // Tweeklanken
   "boek", "koek", "doek", "zoet", "voet", "poes", "stoel", "schoen", "groen",
+  "hoek", "zoek", "broek", "vloek", "roep", "soep", "poep", "stoep", "groep",
+  "snoep", "moet", "roet", "stoet", "groet", "hoes", "moes", "loes", "boel",
+  "koel", "poel", "doel", "zoen", "toen", "oen",
+
   "tien", "mier", "wiel", "knie", "fiets", "ziek", "kies", "riem", "niet",
+  "zien", "dien", "wien", "hier", "dier", "gier", "pier", "vier", "stier",
+  "hiel", "viel", "ziel", "drie", "wie", "die", "niets", "iets", "wiek",
+  "piek", "riek", "vies", "lies", "kiem", "biet", "riet", "giet", "piet",
+  
   "neus", "reus", "deur", "jeuk", "leuk", "beuk", "geur", "kleur", "scheur",
+  "keus", "kneus", "deus", "zeur", "sleur", "speur", "treur", "deuk", "kreuk", "breuk",
+  
   "huis", "muis", "tuin", "ui", "trui", "buit", "duim", "fluit", "kruis",
+  "luis", "buis", "kluis", "ruis", "pluis", "kuil", "huil", "vuil", "uil",
+  "ruit", "spuit", "uit", "fruit", "buik", "ruik", "pruik", "luik", "bruid",
+
   "ei", "geit", "trein", "wei", "klei", "plein", "reis", "zeil", "dweil",
+  "kei", "lei", "mei", "prei", "brei", "feit", "meid", "bereid", "paleis",
+  
   "ijs", "tijd", "rij", "kijk", "bijl", "fijn", "pijl", "wijn", "lijn",
+  "grijs", "prijs", "wijs", "lijst", "rijst", "nijd", "wijd", "glijd", "strijd",
+  "kwijt", "spijt", "ontbijt", "krijt", "lijf", "wrijf", "stijf", "vijf",
+
   "hout", "zout", "koud", "oud", "goud", "woud", "fout", "stout", "touw",
+  "stoud", "jou", "nou", "kouw", "mouw", "bouwen", "vrouw", "trouw",
+
   "pauw", "saus", "blauw", "lauw", "rauw", "auto", "paus",
+  "nauw", "gauw", "klauw",
   
   // Eind -ng / -nk
   "bang", "lang", "wang", "zang", "gang", "ring", "ding", "jong", "tong",
+  "hang", "vang", "tang", "slang", "stang", "kring", "spring", "zing", "wring",
+  "eng", "meng", "kreng", "streng", "sprong", "long",
+
   "bank", "dank", "pink", "vonk", "zink", "bonk", 
+  "jank", "mank", "plank", "stank", "klank", "ronk", "schonk", "pronk",
+  "flink", "drink", "klink", "stink",
   
   // Sch- woorden
-  "schaap", "school", "schip", "schat", "schep", "schuin", "schoon"
+  "schaap", "school", "schip", "schat", "schep", "schuin", "schoon",
+  "schaal", "schaar", "schaats", "schade", "scheef", "scheel", "scheen",
+  "scherf", "scherp", "schiet", "schik", "schil", "schim", "schok", "schol",
+  "schop", "schor", "schot", "schub", "schuif", "schuil", "schuim"
 ];
 
-export default function ReadingApp() {
-  const [words, setWords] = useState<string[]>([]);
-  const [currentWord, setCurrentWord] = useState<string>('');
-  const [count, setCount] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [gameStarted, setGameStarted] = useState<boolean>(false);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const [darkMode, setDarkMode] = useState<boolean>(false);
-  const [showConfetti, setShowConfetti] = useState<boolean>(false);
-  const [confettiType, setConfettiType] = useState<'small' | 'big'>('small');
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
 
-  // Refs voor audio objecten
-  const audioApplause = useRef<HTMLAudioElement | null>(null);
-  const audioCheering = useRef<HTMLAudioElement | null>(null);
-  const audioFanfare = useRef<HTMLAudioElement | null>(null);
-  const audioClick = useRef<HTMLAudioElement | null>(null);
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
 
-  // Data laden (nu lokaal, dus direct klaar)
+  componentDidCatch(error, errorInfo) {
+    console.error("App Crash:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-red-50 p-4 text-center font-sans">
+          <AlertCircle size={64} className="text-red-500 mb-4" />
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Oeps, er ging iets mis!</h2>
+          <p className="text-gray-600 mb-6">De app kon niet goed laden.</p>
+          <div className="bg-white p-4 rounded-lg shadow border border-red-100 text-left max-w-md w-full overflow-auto mb-6 text-xs text-red-600 font-mono">
+            {this.state.error && this.state.error.toString()}
+          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-red-600 text-white rounded-full font-bold shadow hover:bg-red-700 transition"
+          >
+            Probeer opnieuw
+          </button>
+        </div>
+      );
+    }
+    return this.props.children; 
+  }
+}
+
+function ReadingAppContent() {
+  const [words, setWords] = useState([]);
+  const [availableWords, setAvailableWords] = useState([]); // Nieuwe state voor de 'pot'
+  const [currentWord, setCurrentWord] = useState('');
+  
+  // Veilige initialisatie van localStorage
+  const [count, setCount] = useState(() => {
+    try {
+      const savedCount = localStorage.getItem('readingAppCount');
+      return savedCount ? parseInt(savedCount, 10) : 0;
+    } catch (e) {
+      console.warn("Kon localStorage niet lezen:", e);
+      return 0;
+    }
+  });
+  
+  const [loading, setLoading] = useState(true);
+  const [gameStarted, setGameStarted] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [confettiType, setConfettiType] = useState('small');
+
+  const audioApplause = useRef(null);
+  const audioCheering = useRef(null);
+  const audioFanfare = useRef(null);
+  const audioClick = useRef(null);
+
+  // Veilig opslaan in localStorage
   useEffect(() => {
-    // We gebruiken nu de vaste lijst
+    try {
+      localStorage.setItem('readingAppCount', count.toString());
+    } catch (e) {
+      console.warn("Kon niet opslaan in localStorage:", e);
+    }
+  }, [count]);
+
+  useEffect(() => {
+    // Stel de masterlijst in
     setWords(WOORDEN_LIJST);
     
-    // Kies direct een willekeurig woord
-    setCurrentWord(WOORDEN_LIJST[Math.floor(Math.random() * WOORDEN_LIJST.length)]);
+    // Kies een willekeurig startwoord
+    const randomIndex = Math.floor(Math.random() * WOORDEN_LIJST.length);
+    const startWord = WOORDEN_LIJST[randomIndex];
+    setCurrentWord(startWord);
+
+    // Initialiseer de pot (availableWords) met alles BEHALVE het startwoord
+    // Zo voorkomen we directe herhaling bij de eerste klik
+    const initialPool = [...WOORDEN_LIJST];
+    initialPool.splice(randomIndex, 1);
+    setAvailableWords(initialPool);
+
     setLoading(false);
 
-    // Audio initialiseren
     audioApplause.current = new Audio(SOUNDS.applause);
     audioCheering.current = new Audio(SOUNDS.cheering);
     audioFanfare.current = new Audio(SOUNDS.fanfare);
     audioClick.current = new Audio(SOUNDS.click);
     
-    // Volume iets zachter zetten
     if(audioClick.current) audioClick.current.volume = 0.3;
   }, []);
 
-  // Functie om audio af te spelen
-  const playSound = (type: 'click' | 'applause' | 'cheering' | 'fanfare') => {
+  const playSound = useCallback((type) => {
     if (!soundEnabled) return;
-
     try {
       if (type === 'click' && audioClick.current) {
         audioClick.current.currentTime = 0;
@@ -100,55 +215,62 @@ export default function ReadingApp() {
     } catch (e) {
       console.error("Audio play error", e);
     }
-  };
+  }, [soundEnabled]);
 
-  // Logica voor het volgende woord
   const handleTap = useCallback(() => {
+    // Veiligheid: wacht tot woorden geladen zijn
     if (words.length === 0) return;
 
-    // Nieuw willekeurig woord kiezen
-    // Tip: we kiezen echt willekeurig, dus soms kan een woord 2x komen. 
-    // Dat is voor oefenen vaak juist goed (herhaling).
-    const randomIndex = Math.floor(Math.random() * words.length);
-    setCurrentWord(words[randomIndex]);
+    // We werken met een kopie van de huidige pot
+    let pool = [...availableWords];
 
-    // Teller verhogen
+    // Als de pot leeg is, vullen we hem weer met ALLE woorden (nieuwe cyclus)
+    if (pool.length === 0) {
+      pool = [...words];
+    }
+
+    // Kies een willekeurig woord uit de pot
+    const randomIndex = Math.floor(Math.random() * pool.length);
+    const newWord = pool[randomIndex];
+
+    // Zet het nieuwe woord op het scherm
+    setCurrentWord(newWord);
+
+    // Verwijder het gekozen woord uit de pot voor de volgende keer
+    pool.splice(randomIndex, 1);
+    setAvailableWords(pool);
+
     const newCount = count + 1;
     setCount(newCount);
 
-    // Beloningslogica
     if (newCount % 100 === 0) {
-      // Groot feest bij 100, 200, etc.
       playSound('fanfare');
       playSound('cheering');
       triggerConfetti('big');
     } else if (newCount % 10 === 0) {
-      // Applaus bij 10, 20, 30, etc.
       playSound('applause');
       triggerConfetti('small');
     } else {
-      // Gewone klik
       playSound('click');
     }
-  }, [count, words, soundEnabled]);
+  }, [availableWords, words, count, playSound]);
 
-  const triggerConfetti = (type: 'small' | 'big') => {
+  const triggerConfetti = (type) => {
     setConfettiType(type);
     setShowConfetti(true);
-    // Stop confetti na een tijdje
     setTimeout(() => setShowConfetti(false), type === 'big' ? 5000 : 3000);
   };
 
-  // Reset functie
-  const resetGame = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Voorkom dat dit als een 'woord-tap' telt
-    if (confirm("Wil je de teller weer op 0 zetten?")) {
+  const resetGame = (e) => {
+    e.stopPropagation();
+    if (window.confirm("Wil je de teller weer op 0 zetten?")) {
       setCount(0);
       setShowConfetti(false);
+      // Bij reset kunnen we optioneel ook de woordenpot resetten, 
+      // maar het is leuker om door te gaan waar we waren.
     }
   };
 
-  // Startscherm om audio context te activeren
   if (!gameStarted) {
     return (
       <div className={darkMode ? "dark" : ""}>
@@ -190,20 +312,17 @@ export default function ReadingApp() {
     );
   }
 
-  // Hoofdscherm (het spel)
   return (
     <div className={darkMode ? "dark" : ""}>
       <div 
         onClick={handleTap}
         className="relative flex flex-col items-center justify-between min-h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden cursor-pointer touch-manipulation select-none transition-colors duration-300"
       >
-        {/* Achtergrond versiering (subtiel) */}
         <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
           <div className="absolute top-10 left-10 w-32 h-32 bg-yellow-300 rounded-full blur-3xl"></div>
           <div className="absolute bottom-10 right-10 w-48 h-48 bg-pink-300 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Header balk */}
         <div className="w-full p-4 flex justify-between items-center z-10">
           <div className="flex gap-2">
             <button 
@@ -228,17 +347,17 @@ export default function ReadingApp() {
           <button 
             onClick={resetGame}
             className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-md text-slate-400 hover:text-red-500 transition-colors"
+            aria-label="Reset teller"
           >
             <RefreshCw size={24} />
           </button>
         </div>
 
-        {/* Het Woord */}
         <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-4">
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 md:p-16 w-full max-w-3xl flex items-center justify-center border-b-8 border-slate-200 dark:border-slate-700 active:border-b-0 active:translate-y-2 transition-all duration-75">
             <span 
               className="text-6xl md:text-8xl lg:text-9xl font-bold text-slate-800 dark:text-slate-100 tracking-wide text-center break-words"
-              style={{ fontFamily: 'Verdana, sans-serif' }} // Verdana is vaak goed leesbaar voor kinderen
+              style={{ fontFamily: 'Verdana, sans-serif' }}
             >
               {currentWord}
             </span>
@@ -248,11 +367,9 @@ export default function ReadingApp() {
           </p>
         </div>
 
-        {/* Confetti effecten */}
         {showConfetti && (
           <div className="absolute inset-0 pointer-events-none z-50 flex items-center justify-center overflow-hidden">
             {confettiType === 'big' ? (
-              // Big party effect (100 words)
               <div className="absolute inset-0">
                   {[...Array(50)].map((_, i) => (
                     <div 
@@ -275,7 +392,6 @@ export default function ReadingApp() {
                   </div>
               </div>
             ) : (
-              // Small applause effect (10 words)
               <div className="absolute inset-0">
                 {[...Array(20)].map((_, i) => (
                     <div 
@@ -299,7 +415,6 @@ export default function ReadingApp() {
           </div>
         )}
         
-        {/* Custom Styles for falling animation */}
         <style>{`
           @keyframes fall {
             0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
@@ -313,5 +428,14 @@ export default function ReadingApp() {
         `}</style>
       </div>
     </div>
+  );
+}
+
+// Wrapper die de Error Boundary toepast
+export default function ReadingApp() {
+  return (
+    <ErrorBoundary>
+      <ReadingAppContent />
+    </ErrorBoundary>
   );
 }
