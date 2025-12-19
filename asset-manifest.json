@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/lerenlezen/static/css/main.36f04cf5.css",
+    "main.css": "/lerenlezen/static/css/main.aca652cd.css",
     "main.js": "/lerenlezen/static/js/main.8c246aa1.js",
     "static/js/453.fd7b2c7b.chunk.js": "/lerenlezen/static/js/453.fd7b2c7b.chunk.js",
     "index.html": "/lerenlezen/index.html",
-    "main.36f04cf5.css.map": "/lerenlezen/static/css/main.36f04cf5.css.map",
+    "main.aca652cd.css.map": "/lerenlezen/static/css/main.aca652cd.css.map",
     "main.8c246aa1.js.map": "/lerenlezen/static/js/main.8c246aa1.js.map",
     "453.fd7b2c7b.chunk.js.map": "/lerenlezen/static/js/453.fd7b2c7b.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.36f04cf5.css",
+    "static/css/main.aca652cd.css",
     "static/js/main.8c246aa1.js"
   ]
 }
