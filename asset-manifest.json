@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/ldegroen.github.com/lerenlezen/static/css/main.c4486060.css",
+    "main.js": "/ldegroen.github.com/lerenlezen/static/js/main.1bf228d3.js",
+    "static/js/453.fd7b2c7b.chunk.js": "/ldegroen.github.com/lerenlezen/static/js/453.fd7b2c7b.chunk.js",
+    "index.html": "/ldegroen.github.com/lerenlezen/index.html",
+    "main.c4486060.css.map": "/ldegroen.github.com/lerenlezen/static/css/main.c4486060.css.map",
+    "main.1bf228d3.js.map": "/ldegroen.github.com/lerenlezen/static/js/main.1bf228d3.js.map",
+    "453.fd7b2c7b.chunk.js.map": "/ldegroen.github.com/lerenlezen/static/js/453.fd7b2c7b.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.c4486060.css",
+    "static/js/main.1bf228d3.js"
+  ]
+}
