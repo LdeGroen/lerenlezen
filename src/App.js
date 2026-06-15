@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Star, Trophy, Volume2, VolumeX, RefreshCw, Loader2, Moon, Sun, AlertCircle, BookOpen, Type, Play, Undo, Library, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Star, Trophy, Volume2, VolumeX, RefreshCw, Loader2, Moon, Sun, AlertCircle, BookOpen, Type, Play, Undo, Library, ArrowRight, Sparkles, List, X } from 'lucide-react';
 import { TextToSpeech } from '@capacitor-community/text-to-speech';
+import { Capacitor } from '@capacitor/core';
 
 // Eenvoudige geluidseffecten URLs
 const SOUNDS = {
@@ -728,6 +729,1025 @@ const VERHALEN = [
   }
 ];
 
+// --- DATA: INTERACTIEVE AVONTUREN (Roan en Puck) ---
+// Elk avontuur is een graaf van 'nodes'. Een node toont een paar zinnen (tik om door te lezen)
+// en eindigt met 'keuzes' (knoppen die naar een andere node springen) of met 'einde: true'.
+// Alle woorden zijn klankzuiver (einde groep 3); alleen de namen Roan en Puck zijn uitgezonderd.
+const AVONTUREN = [
+  {
+    titel: "het pad in het bos",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "roan en puck gaan naar het bos.",
+          "de zon schijnt fel.",
+          "het pad gaat twee kanten op.",
+          "welke kant kiest roan?"
+        ],
+        keuzes: [
+          { tekst: "loop naar links", naar: "meer" },
+          { tekst: "loop naar rechts", naar: "grot" }
+        ]
+      },
+      meer: {
+        zinnen: [
+          "roan loopt naar links.",
+          "daar ligt een groot meer.",
+          "het water is heel diep.",
+          "puck ziet een boot van hout.",
+          "wat doen ze nu?"
+        ],
+        keuzes: [
+          { tekst: "stap in de boot", naar: "boot" },
+          { tekst: "duik in het meer", naar: "duik" }
+        ]
+      },
+      boot: {
+        zinnen: [
+          "ze stappen in de boot.",
+          "roan pakt de steen vast.",
+          "de boot vaart vanzelf.",
+          "hij gaat heel snel.",
+          "ze varen naar de kant.",
+          "daar ligt een kist in het zand.",
+          "roan maakt de kist open.",
+          "de kist zit vol met goud!",
+          "wat een mooie schat."
+        ],
+        einde: true
+      },
+      duik: {
+        zinnen: [
+          "puck duikt in het meer.",
+          "plons!",
+          "het water is veel te koud.",
+          "roan pakt snel de steen.",
+          "ze maakt het water warm.",
+          "nu is het net een warm bad.",
+          "puck zwemt als een vis.",
+          "roan springt er ook in.",
+          "wat een pret in het meer."
+        ],
+        einde: true
+      },
+      grot: {
+        zinnen: [
+          "roan loopt naar rechts.",
+          "daar is een grot.",
+          "het is er heel donker.",
+          "puck is een beetje bang.",
+          "hij ziet bijna niks.",
+          "wat doet roan?"
+        ],
+        keuzes: [
+          { tekst: "pak de steen", naar: "licht" },
+          { tekst: "ren snel weg", naar: "weg" }
+        ]
+      },
+      licht: {
+        zinnen: [
+          "roan pakt de blauwe steen.",
+          "de steen geeft fel licht.",
+          "nu zien ze de hele grot.",
+          "de muur is vol met steen die glimt.",
+          "het lijkt wel of er sterren zijn.",
+          "in de hoek slaapt een vleermuis.",
+          "stil zegt roan zacht.",
+          "ze sluipen heel rustig weg.",
+          "wat een mooie grot was dat."
+        ],
+        einde: true
+      },
+      weg: {
+        zinnen: [
+          "kom mee roept puck.",
+          "ze rennen de grot uit.",
+          "buiten schijnt de zon weer.",
+          "puck is heel moe.",
+          "dat was wel eng zeg.",
+          "roan lacht naar puck.",
+          "een ander keer gaan we terug.",
+          "met de steen voor licht.",
+          "nu eerst snel naar huis."
+        ],
+        einde: true
+      }
+    }
+  },
+  {
+    titel: "een dag aan zee",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "roan en puck zijn aan zee.",
+          "de zon is warm.",
+          "het zand is heel zacht.",
+          "puck wil graag spelen.",
+          "wat doen ze eerst?"
+        ],
+        keuzes: [
+          { tekst: "graaf in het zand", naar: "graaf" },
+          { tekst: "ren naar het water", naar: "water" }
+        ]
+      },
+      graaf: {
+        zinnen: [
+          "puck graaft in het zand.",
+          "hij maakt een diep gat.",
+          "wat is dat daar?",
+          "een oude fles!",
+          "roan pakt de fles op.",
+          "er zit een brief in.",
+          "roan pakt de steen.",
+          "de fles gaat open.",
+          "op de brief staat een schatkaart!",
+          "wat doen ze nu?"
+        ],
+        keuzes: [
+          { tekst: "zoek de schat", naar: "schat" },
+          { tekst: "loop naar huis", naar: "huis" }
+        ]
+      },
+      schat: {
+        zinnen: [
+          "ze lopen langs de kaart.",
+          "tien stap naar links.",
+          "drie stap naar rechts.",
+          "hier moet het zijn.",
+          "puck graaft heel snel.",
+          "daar is een kist!",
+          "de kist zit vol met goud.",
+          "en met mooi groen glas.",
+          "wat een rijke dag."
+        ],
+        einde: true
+      },
+      huis: {
+        zinnen: [
+          "het is al laat.",
+          "we gaan naar huis zegt roan.",
+          "de kaart nemen we mee.",
+          "puck stopt hem in zijn zak.",
+          "een ander keer zoeken we de schat.",
+          "dat wordt vast heel leuk."
+        ],
+        einde: true
+      },
+      water: {
+        zinnen: [
+          "puck rent naar het water.",
+          "de golf is heel hoog.",
+          "hij spat op zijn buik.",
+          "bah dat is koud.",
+          "roan ziet een krab.",
+          "de krab loopt scheef.",
+          "hij heeft een grote schaar.",
+          "wat doet roan?"
+        ],
+        keuzes: [
+          { tekst: "pak de krab", naar: "krab" },
+          { tekst: "laat hem gaan", naar: "schelp" }
+        ]
+      },
+      krab: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze wijst naar de krab.",
+          "de krab wordt heel groot.",
+          "zo groot als een hond!",
+          "puck schrikt zich rot.",
+          "maar de krab is lief.",
+          "hij geeft puck een poot.",
+          "ze spelen op het strand.",
+          "de grote krab rent mee.",
+          "wat een gekke dag."
+        ],
+        einde: true
+      },
+      schelp: {
+        zinnen: [
+          "laat hem maar gaan zegt roan.",
+          "de krab loopt weg.",
+          "terug naar de zee.",
+          "dag krab roept puck.",
+          "ze zoeken nog een mooie schelp.",
+          "puck vindt er heel veel.",
+          "roan maakt er een rij van.",
+          "wat een fijne dag aan zee."
+        ],
+        einde: true
+      }
+    }
+  },
+  {
+    titel: "de grote storm",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "het waait heel hard.",
+          "de wind giert om het huis.",
+          "puck kijkt uit het raam.",
+          "de lucht is heel grijs.",
+          "een tak valt op de stoep.",
+          "puck vindt het eng.",
+          "wat doet roan?"
+        ],
+        keuzes: [
+          { tekst: "pak de steen", naar: "steen" },
+          { tekst: "kruip op de bank", naar: "bank" }
+        ]
+      },
+      steen: {
+        zinnen: [
+          "roan pakt de blauwe steen.",
+          "ze loopt naar het raam.",
+          "stop wind roept ze hard.",
+          "de steen wordt fel geel.",
+          "buiten wordt het stil.",
+          "de wind is weg.",
+          "de zon komt er door.",
+          "wat doen ze nu?"
+        ],
+        keuzes: [
+          { tekst: "loop naar buiten", naar: "buiten" },
+          { tekst: "blijf nog binnen", naar: "binnen" }
+        ]
+      },
+      buiten: {
+        zinnen: [
+          "ze lopen naar buiten.",
+          "de stoep is nog heel nat.",
+          "er ligt een grote plas.",
+          "puck springt er in.",
+          "het water spat hoog op.",
+          "roan pakt de steen.",
+          "de plas wordt heel groot.",
+          "het is net een meer!",
+          "ze spelen in het water.",
+          "wat een nat en fijn feest."
+        ],
+        einde: true
+      },
+      binnen: {
+        zinnen: [
+          "we blijven lekker binnen.",
+          "roan zet thee.",
+          "puck pakt een boek.",
+          "ze zitten warm op de bank.",
+          "buiten is het weer rustig.",
+          "wat een fijne dag."
+        ],
+        einde: true
+      },
+      bank: {
+        zinnen: [
+          "puck kruipt op de bank.",
+          "hij pakt een warm kleed.",
+          "roan komt er bij zitten.",
+          "wees maar niet bang zegt ze.",
+          "ik ben bij je.",
+          "de storm gaat zo weer weg.",
+          "puck voelt zich veilig.",
+          "nu is puck niet bang meer."
+        ],
+        einde: true
+      }
+    }
+  },
+  {
+    titel: "de draak in de grot",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "roan en puck zien een berg.",
+          "in de berg is een grot.",
+          "uit de grot komt rook.",
+          "daar woont een draak!",
+          "de draak brult heel hard.",
+          "wat doet roan?"
+        ],
+        keuzes: [
+          { tekst: "loop naar de draak", naar: "praat" },
+          { tekst: "pak de steen", naar: "vecht" }
+        ]
+      },
+      praat: {
+        zinnen: [
+          "roan loopt naar de grot.",
+          "puck blijft staan.",
+          "wees maar niet boos!",
+          "roept roan naar de draak.",
+          "de draak kijkt verbaasd.",
+          "niemand praat met hem.",
+          "wat wil de draak?"
+        ],
+        keuzes: [
+          { tekst: "geef hem eten", naar: "vriend" },
+          { tekst: "vraag wat er is", naar: "traan" }
+        ]
+      },
+      vecht: {
+        zinnen: [
+          "roan pakt de steen.",
+          "de steen wordt fel rood.",
+          "ze schiet een straal.",
+          "de draak schrikt heel erg.",
+          "hij blaast vuur terug.",
+          "puck springt opzij.",
+          "dit gaat niet goed.",
+          "wat nu?"
+        ],
+        keuzes: [
+          { tekst: "schiet nog een keer", naar: "win" },
+          { tekst: "stop met vechten", naar: "spijt" }
+        ]
+      },
+      vriend: {
+        zinnen: [
+          "puck heeft nog een koek.",
+          "roan geeft hem aan de draak.",
+          "de draak ruikt eraan.",
+          "hap! de koek is op.",
+          "de draak is heel blij.",
+          "hij is nu hun vriend.",
+          "ze mogen op zijn rug.",
+          "ze vliegen heel hoog.",
+          "wat een stoere draak."
+        ],
+        einde: true
+      },
+      traan: {
+        zinnen: [
+          "wat is er draak?",
+          "vraagt roan heel zacht.",
+          "de draak laat een traan.",
+          "ik ben heel erg ziek.",
+          "roan pakt de steen.",
+          "ze legt hem op zijn kop.",
+          "de steen gloeit warm.",
+          "de draak voelt zich beter.",
+          "dank je wel zegt hij.",
+          "nu is hij hun vriend."
+        ],
+        einde: true
+      },
+      win: {
+        zinnen: [
+          "roan schiet weer een straal.",
+          "de straal is heel sterk.",
+          "de draak gaat naar achter.",
+          "hij is nu bang voor roan.",
+          "hij vlucht diep de grot in.",
+          "de grot is nu veilig.",
+          "puck juicht heel hard.",
+          "jij bent heel stoer roan."
+        ],
+        einde: true
+      },
+      spijt: {
+        zinnen: [
+          "roan stopt met vechten.",
+          "dit is niet lief.",
+          "zegt ze tegen puck.",
+          "ze legt de steen weg.",
+          "de draak stopt ook.",
+          "sorry zegt roan zacht.",
+          "de draak knikt langzaam.",
+          "ze gaan weer naar huis.",
+          "vechten is niks voor roan."
+        ],
+        einde: true
+      }
+    }
+  },
+  {
+    titel: "de stad in de wolk",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "roan kijkt naar de lucht.",
+          "daar hangt een grote wolk.",
+          "de wolk heeft een deur!",
+          "is daar een stad?",
+          "roan pakt de steen.",
+          "ze maakt een trap van licht.",
+          "gaan ze omhoog?"
+        ],
+        keuzes: [
+          { tekst: "klim naar de wolk", naar: "stad" },
+          { tekst: "blijf op de grond", naar: "grond" }
+        ]
+      },
+      stad: {
+        zinnen: [
+          "ze klimmen heel hoog.",
+          "daar is de stad!",
+          "de huizen zijn van wolk.",
+          "alles is heel zacht.",
+          "het is er heel stil.",
+          "wat gaan ze doen?"
+        ],
+        keuzes: [
+          { tekst: "zoek in de stad", naar: "zoek" },
+          { tekst: "roep heel hard", naar: "volk" }
+        ]
+      },
+      grond: {
+        zinnen: [
+          "puck durft niet zo hoog.",
+          "we blijven hier zegt hij.",
+          "de trap van licht zakt weg.",
+          "maar er valt iets uit de wolk.",
+          "het is een kleine sleutel.",
+          "van wie is die?"
+        ],
+        keuzes: [
+          { tekst: "pak de sleutel", naar: "luik" },
+          { tekst: "laat hem liggen", naar: "thuis" }
+        ]
+      },
+      zoek: {
+        zinnen: [
+          "ze zoeken in een huis.",
+          "daar staat een kist.",
+          "de kist is van zilver.",
+          "roan maakt hem open.",
+          "er zit een kroon in!",
+          "een kroon van goud.",
+          "roan zet hem op.",
+          "nu is zij de baas van de stad."
+        ],
+        einde: true
+      },
+      volk: {
+        zinnen: [
+          "roan roept heel hard.",
+          "is hier iemand?",
+          "dan komen er mensen.",
+          "het zijn wolk mensen!",
+          "ze zijn heel klein en wit.",
+          "een reus joeg ons weg.",
+          "roan pakt de steen.",
+          "ze jaagt de reus weg.",
+          "de mensen zijn heel blij.",
+          "roan is hun held."
+        ],
+        einde: true
+      },
+      luik: {
+        zinnen: [
+          "roan pakt de sleutel op.",
+          "waar past die op?",
+          "puck ziet een klein luik.",
+          "in de grond bij de boom.",
+          "de sleutel past precies!",
+          "het luik gaat open.",
+          "een trap gaat naar onder.",
+          "naar een stad onder de grond!",
+          "wat een geheim."
+        ],
+        einde: true
+      },
+      thuis: {
+        zinnen: [
+          "laat maar liggen zegt puck.",
+          "ik wil naar huis.",
+          "ze lopen terug.",
+          "maar roan kijkt om.",
+          "de wolk met de deur.",
+          "die komt vast nog terug.",
+          "een ander keer klimmen we.",
+          "naar de stad in de wolk."
+        ],
+        einde: true
+      }
+    }
+  },
+  {
+    titel: "puck zakt door het ijs",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "het is winter.",
+          "op de plas ligt ijs.",
+          "puck loopt op het ijs.",
+          "wees voorzichtig roept roan.",
+          "krak! zegt het ijs.",
+          "puck zakt door het ijs!",
+          "help roept puck.",
+          "wat doet roan snel?"
+        ],
+        keuzes: [
+          { tekst: "pak de steen", naar: "tiltop" },
+          { tekst: "ren naar puck", naar: "ren" }
+        ]
+      },
+      tiltop: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze wijst naar het water.",
+          "het water tilt puck op.",
+          "hij komt weer omhoog.",
+          "puck ligt op het harde ijs.",
+          "wat nu?"
+        ],
+        keuzes: [
+          { tekst: "trek hem naar de kant", naar: "redt" },
+          { tekst: "maak een warm vuur", naar: "warm" }
+        ]
+      },
+      ren: {
+        zinnen: [
+          "roan rent naar puck.",
+          "maar het ijs kraakt.",
+          "ook bij roan!",
+          "dit is heel eng.",
+          "ze geeft puck haar hand.",
+          "hou vast roept ze.",
+          "wat doet ze dan?"
+        ],
+        keuzes: [
+          { tekst: "trek heel hard", naar: "trek" },
+          { tekst: "pak de steen", naar: "dik" }
+        ]
+      },
+      redt: {
+        zinnen: [
+          "roan trekt puck mee.",
+          "naar de droge kant.",
+          "puck rilt heel erg.",
+          "zijn lip is helemaal blauw.",
+          "roan slaat haar jas om hem.",
+          "kom we gaan naar huis.",
+          "bij het warme vuur.",
+          "puck is weer veilig.",
+          "dank je wel zus."
+        ],
+        einde: true
+      },
+      warm: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze maakt een warm vuur.",
+          "het vuur is fel en warm.",
+          "puck kruipt er dicht bij.",
+          "zijn kou gaat snel weg.",
+          "wat ben jij slim roan.",
+          "jij hebt mij gered.",
+          "puck geeft haar een knuffel."
+        ],
+        einde: true
+      },
+      trek: {
+        zinnen: [
+          "roan trekt heel hard.",
+          "puck komt omhoog.",
+          "ze vallen allebei om.",
+          "op het droge gras.",
+          "ze zijn allebei nat.",
+          "maar puck is veilig!",
+          "dat was heel eng zeg.",
+          "nooit meer op dun ijs."
+        ],
+        einde: true
+      },
+      dik: {
+        zinnen: [
+          "roan pakt snel de steen.",
+          "ze maakt het ijs heel dik.",
+          "het ijs draagt hen weer.",
+          "ze kruipen naar de kant.",
+          "heel rustig en zacht.",
+          "puff dat was eng.",
+          "puck rilt van de kou.",
+          "snel naar huis en warm."
+        ],
+        einde: true
+      }
+    }
+  },
+  {
+    titel: "het monster in het meer",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "roan en puck zijn bij het meer.",
+          "het water borrelt heel raar.",
+          "er komt iets uit het meer.",
+          "een groot groen monster!",
+          "het heeft heel veel tanden.",
+          "puck wil hard weg rennen.",
+          "wat doet roan?"
+        ],
+        keuzes: [
+          { tekst: "ren met puck mee", naar: "ren" },
+          { tekst: "blijf staan en kijk", naar: "kijk" }
+        ]
+      },
+      ren: {
+        zinnen: [
+          "ze rennen heel hard weg.",
+          "het monster komt er aan!",
+          "het is heel erg snel.",
+          "ze zien een hoge boom.",
+          "wat doen ze nu?"
+        ],
+        keuzes: [
+          { tekst: "klim in de boom", naar: "boom" },
+          { tekst: "pak de steen", naar: "golf" }
+        ]
+      },
+      kijk: {
+        zinnen: [
+          "roan blijft heel stil staan.",
+          "ze kijkt het monster aan.",
+          "het monster stopt ook.",
+          "het kijkt heel verdrietig.",
+          "ben jij wel boos?",
+          "vraagt roan zacht.",
+          "nee zegt het monster.",
+          "ik ben heel erg alleen."
+        ],
+        keuzes: [
+          { tekst: "wees zijn vriend", naar: "vriend" },
+          { tekst: "maak hem klein", naar: "klein" }
+        ]
+      },
+      boom: {
+        zinnen: [
+          "ze klimmen in de boom.",
+          "heel hoog tussen de tak.",
+          "het monster kan er niet bij.",
+          "het is veel te groot.",
+          "het brult nog een keer.",
+          "dan zakt het terug in het meer.",
+          "pff dat was heel eng.",
+          "ze klimmen snel weer omlaag."
+        ],
+        einde: true
+      },
+      golf: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze wijst naar het meer.",
+          "het water wordt heel hoog.",
+          "een golf duwt het monster terug.",
+          "het spoelt het meer weer in.",
+          "het monster is weg.",
+          "puck valt roan om de hals.",
+          "jij bent niet bang he."
+        ],
+        einde: true
+      },
+      vriend: {
+        zinnen: [
+          "roan aait het monster.",
+          "het voelt nat en glad.",
+          "wil je met ons spelen?",
+          "ja roept het monster blij.",
+          "het maakt een grote sprong.",
+          "het spettert het meer rond.",
+          "ze spelen de hele dag.",
+          "het monster is hun vriend."
+        ],
+        einde: true
+      },
+      klein: {
+        zinnen: [
+          "roan pakt de steen.",
+          "word eens klein zegt ze.",
+          "het monster krimpt heel snel.",
+          "nu is het zo klein als een vis.",
+          "wat een schattig beest.",
+          "puck pakt het heel zacht.",
+          "ze nemen het mee naar huis.",
+          "in een kom met water."
+        ],
+        einde: true
+      }
+    }
+  },
+  {
+    titel: "de berg van vuur",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "roan en puck zien een berg.",
+          "de berg spuugt vuur!",
+          "er rolt warme steen omlaag.",
+          "een dorp is in gevaar!",
+          "de mensen zijn heel bang.",
+          "kan roan hen helpen?"
+        ],
+        keuzes: [
+          { tekst: "stop het vuur", naar: "stop" },
+          { tekst: "red de mensen", naar: "red" }
+        ]
+      },
+      stop: {
+        zinnen: [
+          "roan loopt naar de berg.",
+          "ze pakt de blauwe steen.",
+          "de steen wordt heel koud.",
+          "ze blaast koude lucht.",
+          "het vuur wordt minder.",
+          "wat doet ze nog meer?"
+        ],
+        keuzes: [
+          { tekst: "maak er sneeuw van", naar: "sneeuw" },
+          { tekst: "duw het vuur weg", naar: "duw" }
+        ]
+      },
+      red: {
+        zinnen: [
+          "roan rent naar het dorp.",
+          "snel weg hier roept ze.",
+          "ze pakt de steen.",
+          "ze maakt een muur van licht.",
+          "de warme steen stopt er op.",
+          "maar er mist nog iemand.",
+          "een klein kind in een huis!"
+        ],
+        keuzes: [
+          { tekst: "ren naar het kind", naar: "kind" },
+          { tekst: "vlieg met de steen", naar: "vlieg" }
+        ]
+      },
+      sneeuw: {
+        zinnen: [
+          "roan maakt er sneeuw van.",
+          "het sneeuwt op de berg.",
+          "het vuur gaat helemaal uit.",
+          "de berg wordt weer rustig.",
+          "het dorp is gered!",
+          "de mensen juichen heel hard.",
+          "roan heeft het gedaan.",
+          "met haar koude steen."
+        ],
+        einde: true
+      },
+      duw: {
+        zinnen: [
+          "roan duwt met de steen.",
+          "het rode vuur draait om.",
+          "het gaat een andere kant op.",
+          "weg van het dorp.",
+          "in een leeg dal.",
+          "daar kan het geen kwaad.",
+          "het dorp is helemaal veilig.",
+          "roan veegt het zweet weg."
+        ],
+        einde: true
+      },
+      kind: {
+        zinnen: [
+          "roan rent naar het huis.",
+          "het kind huilt heel hard.",
+          "kom maar zegt roan lief.",
+          "ze pakt het kind op.",
+          "ze rent heel snel weg.",
+          "net op tijd!",
+          "het kind is veilig.",
+          "de mama geeft een dikke kus."
+        ],
+        einde: true
+      },
+      vlieg: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze maakt zich heel licht.",
+          "ze vliegt naar het huis.",
+          "door het raam naar binnen.",
+          "ze grijpt het kind vast.",
+          "en vliegt snel weer weg.",
+          "iedereen is heel blij.",
+          "roan is een echte held."
+        ],
+        einde: true
+      }
+    }
+  },
+  {
+    titel: "het slot van de reus",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "op een berg staat een slot.",
+          "in het slot woont een reus.",
+          "de reus heeft een hond gepakt.",
+          "de hond zit vast in het slot.",
+          "hij jankt heel zielig.",
+          "roan wil de hond redden.",
+          "hoe komt ze in het slot?"
+        ],
+        keuzes: [
+          { tekst: "klim over de muur", naar: "muur" },
+          { tekst: "klop op de poort", naar: "poort" }
+        ]
+      },
+      muur: {
+        zinnen: [
+          "roan klimt over de muur.",
+          "puck klimt achter haar aan.",
+          "ze zijn in de tuin van het slot.",
+          "daar slaapt de grote reus.",
+          "hij snurkt heel hard.",
+          "de hond zit in een hok.",
+          "wat doen ze nu?"
+        ],
+        keuzes: [
+          { tekst: "sluip heel zacht", naar: "sluip" },
+          { tekst: "pak de steen", naar: "straal" }
+        ]
+      },
+      poort: {
+        zinnen: [
+          "roan klopt op de poort.",
+          "de reus doet open.",
+          "wat moet jij hier?",
+          "bromt de grote reus.",
+          "geef de hond terug zegt roan.",
+          "de reus lacht heel hard.",
+          "kom hem maar pakken!"
+        ],
+        keuzes: [
+          { tekst: "wees heel dapper", naar: "dapper" },
+          { tekst: "maak de reus klein", naar: "klein" }
+        ]
+      },
+      sluip: {
+        zinnen: [
+          "ze sluipen heel zacht.",
+          "langs de reus die slaapt.",
+          "roan maakt het hok open.",
+          "de hond rent naar haar toe.",
+          "stil zegt roan zacht.",
+          "ze sluipen weer terug.",
+          "over de muur naar huis.",
+          "de hond is gered!",
+          "hij likt roan heel blij."
+        ],
+        einde: true
+      },
+      straal: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze maakt het hok open.",
+          "met een straal van licht.",
+          "maar de reus wordt wakker!",
+          "ze maakt de reus heel klein.",
+          "nu is hij zo klein als puck.",
+          "doe niet meer zo stoer.",
+          "zegt roan tegen de reus.",
+          "de hond is vrij en blij."
+        ],
+        einde: true
+      },
+      dapper: {
+        zinnen: [
+          "roan stapt naar binnen.",
+          "ze is heel erg dapper.",
+          "ze rent naar de hond.",
+          "ze maakt het touw los.",
+          "de reus pakt naar haar.",
+          "maar roan is veel te snel.",
+          "ze rent naar buiten.",
+          "met de hond in haar arm.",
+          "de reus is veel te traag."
+        ],
+        einde: true
+      },
+      klein: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze wijst naar de reus.",
+          "word maar klein roept ze.",
+          "de reus krimpt heel snel.",
+          "nu is hij heel erg klein.",
+          "hij piept als een muis.",
+          "sorry sorry roept hij.",
+          "roan pakt de hond op.",
+          "wees voortaan lief reus."
+        ],
+        einde: true
+      }
+    }
+  },
+  {
+    titel: "de wolf in het bos",
+    start: "begin",
+    nodes: {
+      begin: {
+        zinnen: [
+          "roan en puck zijn in het bos.",
+          "een lam roept om hulp.",
+          "het lam is heel klein.",
+          "een wolf sluipt er naar toe.",
+          "de wolf heeft honger.",
+          "het lam is in gevaar!",
+          "wat doet roan snel?"
+        ],
+        keuzes: [
+          { tekst: "jaag de wolf weg", naar: "jaag" },
+          { tekst: "praat met de wolf", naar: "praat" }
+        ]
+      },
+      jaag: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze maakt een hard geluid.",
+          "boem als een donder.",
+          "de wolf schrikt heel erg.",
+          "maar hij gaat niet weg.",
+          "hij gromt naar roan.",
+          "wat doet ze nu?"
+        ],
+        keuzes: [
+          { tekst: "maak de wolf klein", naar: "klein" },
+          { tekst: "til het lam op", naar: "til" }
+        ]
+      },
+      praat: {
+        zinnen: [
+          "wacht zegt roan zacht.",
+          "eet dit lam niet op.",
+          "de wolf kijkt naar haar.",
+          "ik heb zo veel honger.",
+          "zegt de wolf heel zacht.",
+          "roan heeft een plan."
+        ],
+        keuzes: [
+          { tekst: "geef hem ander eten", naar: "bout" },
+          { tekst: "maak een grote vis", naar: "vis" }
+        ]
+      },
+      klein: {
+        zinnen: [
+          "roan maakt de wolf klein.",
+          "nu is hij zo klein als een muis.",
+          "hij kan het lam niks doen.",
+          "het lam huppelt blij weg.",
+          "terug naar zijn mama.",
+          "de kleine wolf rent weg.",
+          "hij zoekt maar een muis.",
+          "roan en puck lachen."
+        ],
+        einde: true
+      },
+      til: {
+        zinnen: [
+          "roan tilt het lam op.",
+          "ze rent er snel mee weg.",
+          "de wolf rent er achter aan.",
+          "maar roan pakt de steen.",
+          "ze maakt een muur van licht.",
+          "de wolf kan er niet door.",
+          "het lam is veilig!",
+          "ze brengt het naar de wei."
+        ],
+        einde: true
+      },
+      bout: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze maakt een grote bout.",
+          "een dikke bout met vlees.",
+          "hier zegt ze tegen de wolf.",
+          "de wolf eet de bout op.",
+          "hap slik weg.",
+          "nu heeft hij geen honger meer.",
+          "dank je wel zegt de wolf.",
+          "hij laat het lam met rust."
+        ],
+        einde: true
+      },
+      vis: {
+        zinnen: [
+          "roan pakt de steen.",
+          "ze maakt een hele grote vis.",
+          "de vis valt voor de wolf.",
+          "wauw zegt de wolf blij.",
+          "die lust ik nog veel meer.",
+          "hij sleept de vis mee.",
+          "het lam rent snel naar huis.",
+          "de wolf en het lam zijn vrienden.",
+          "wat een goede afloop."
+        ],
+        einde: true
+      }
+    }
+  }
+];
+
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -768,11 +1788,24 @@ class ErrorBoundary extends React.Component {
 
 function ReadingAppContent() {
   const [currentContent, setCurrentContent] = useState('');
-  const [mode, setMode] = useState('words'); // 'words', 'sentences', 'story'
-  
+  const [mode, setMode] = useState('words'); // 'words', 'sentences', 'story', 'avontuur'
+
   // Story state
   const [storyProgress, setStoryProgress] = useState({ chapter: 0, sentenceIndex: 0 });
   const [showChapterEnd, setShowChapterEnd] = useState(false);
+
+  // Avontuur (interactief) state
+  const [avontuurProgress, setAvontuurProgress] = useState({
+    avontuur: 0,
+    node: AVONTUREN[0].start,
+    zinIndex: 0
+  });
+  const [showAvontuurEnd, setShowAvontuurEnd] = useState(false);
+
+  // Modals (in-app i.p.v. alert/confirm)
+  const [showPicker, setShowPicker] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [showBookEndModal, setShowBookEndModal] = useState(false);
 
   // History for Undo
   const [history, setHistory] = useState([]);
@@ -796,6 +1829,14 @@ function ReadingAppContent() {
       if (savedStory) {
         setStoryProgress(JSON.parse(savedStory));
       }
+      const savedAvontuur = localStorage.getItem('readingAppAvontuurProgress');
+      if (savedAvontuur) {
+        const parsed = JSON.parse(savedAvontuur);
+        // Alleen herstellen als de opgeslagen node nog bestaat (data kan zijn gewijzigd)
+        if (AVONTUREN[parsed.avontuur]?.nodes?.[parsed.node]) {
+          setAvontuurProgress(parsed);
+        }
+      }
     } catch(e) {}
   }, []);
 
@@ -807,6 +1848,10 @@ function ReadingAppContent() {
   useEffect(() => {
     try { localStorage.setItem('readingAppStoryProgress', JSON.stringify(storyProgress)); } catch(e) {}
   }, [storyProgress]);
+
+  useEffect(() => {
+    try { localStorage.setItem('readingAppAvontuurProgress', JSON.stringify(avontuurProgress)); } catch(e) {}
+  }, [avontuurProgress]);
 
   const [loading, setLoading] = useState(true);
   const [gameStarted, setGameStarted] = useState(false);
@@ -822,7 +1867,7 @@ function ReadingAppContent() {
   const audioPageFlip = useRef(null);
 
   useEffect(() => {
-    const initialWords = [...WOORDEN_LIJST];
+    const initialWords = [...new Set(WOORDEN_LIJST)]; // dubbele woorden eruit
     const initialSentences = [...ZINNEN_LIJST];
 
     // Initial content random pick
@@ -866,6 +1911,16 @@ function ReadingAppContent() {
     }
   }, [mode, storyProgress, showChapterEnd]);
 
+  // Sync content when in avontuur mode
+  useEffect(() => {
+    if (mode === 'avontuur' && !showAvontuurEnd) {
+      const node = AVONTUREN[avontuurProgress.avontuur]?.nodes?.[avontuurProgress.node];
+      if (node) {
+        setCurrentContent(node.zinnen[avontuurProgress.zinIndex]);
+      }
+    }
+  }, [mode, avontuurProgress, showAvontuurEnd]);
+
   const playSound = useCallback((type) => {
     if (!soundEnabled) return;
     try {
@@ -890,35 +1945,45 @@ function ReadingAppContent() {
     }
   }, [soundEnabled]);
 
-  const speakCurrentContent = useCallback(async (e) => {
-    e && e.stopPropagation(); 
+  // Spreekt willekeurige tekst uit. Op Android via de Capacitor-plugin, in de browser via speechSynthesis.
+  const speakText = useCallback(async (text) => {
+    if (!text) return;
 
-    const textToSpeak = showChapterEnd 
-      ? VERHALEN[storyProgress.chapter]?.vraag 
-      : currentContent;
-
-    // Fallback voor browser (Canvas)
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-        console.warn("Spraak niet ondersteund in deze browser.");
-        return;
+    // Native (Android/iOS): gebruik de Capacitor Text-to-Speech plugin
+    if (Capacitor.isNativePlatform()) {
+      try { await TextToSpeech.stop(); } catch (e) {}
+      try {
+        await TextToSpeech.speak({ text, lang: 'nl-NL', rate: 0.9 });
+      } catch (e) {
+        console.error("TTS (native) error", e);
+      }
+      return;
     }
 
-    // Haal de stemmen op (soms nodig om ze te verversen)
+    // Browser: speechSynthesis
+    if (typeof window === 'undefined' || !window.speechSynthesis) {
+      console.warn("Spraak niet ondersteund in deze browser.");
+      return;
+    }
     const voices = window.speechSynthesis.getVoices();
-
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'nl-NL';
-    utterance.rate = 0.85; 
-
-    // Probeer specifiek een NL stem te pakken als die er is
+    utterance.rate = 0.85;
     const dutchVoice = voices.find(voice => voice.lang.includes('nl') || voice.lang.includes('NL'));
     if (dutchVoice) {
-        utterance.voice = dutchVoice;
+      utterance.voice = dutchVoice;
     }
-
     window.speechSynthesis.cancel(); // Stop vorige spraak
     window.speechSynthesis.speak(utterance);
-  }, [showChapterEnd, storyProgress.chapter, currentContent]);
+  }, []);
+
+  const speakCurrentContent = useCallback((e) => {
+    e && e.stopPropagation();
+    const textToSpeak = showChapterEnd
+      ? VERHALEN[storyProgress.chapter]?.vraag
+      : currentContent;
+    speakText(textToSpeak);
+  }, [showChapterEnd, storyProgress.chapter, currentContent, speakText]);
 
   const handleUndo = (e) => {
     e.stopPropagation();
@@ -933,6 +1998,10 @@ function ReadingAppContent() {
     if (lastAction.mode === 'story') {
         setStoryProgress(lastAction.storyProgress);
         setShowChapterEnd(lastAction.showChapterEnd);
+        setCurrentContent(lastAction.content);
+    } else if (lastAction.mode === 'avontuur') {
+        setAvontuurProgress(lastAction.avontuurProgress);
+        setShowAvontuurEnd(lastAction.showAvontuurEnd);
         setCurrentContent(lastAction.content);
     } else {
         setCurrentContent(lastAction.content);
@@ -965,15 +2034,21 @@ function ReadingAppContent() {
       // Boek is uit!
       playSound('fanfare');
       triggerConfetti('big');
-      alert("Gefeliciteerd! Je hebt het hele boek uitgelezen!");
-      // Reset story loop or stay at end? Let's reset to chap 1 for now
+      setShowBookEndModal(true);
+      // Terug naar het begin van het boek
       setStoryProgress({ chapter: 0, sentenceIndex: 0 });
       setShowChapterEnd(false);
     }
   };
 
   const handleTap = useCallback(async () => {
-    if (showChapterEnd) return; // Moet op de knop klikken
+    if (showChapterEnd || showAvontuurEnd) return; // Moet op de knop klikken
+
+    // Op een keuzemoment in avontuur-modus doet tikken op de achtergrond niets
+    if (mode === 'avontuur') {
+      const node = AVONTUREN[avontuurProgress.avontuur]?.nodes?.[avontuurProgress.node];
+      if (node && node.keuzes && avontuurProgress.zinIndex >= node.zinnen.length - 1) return;
+    }
 
     if (typeof window !== 'undefined' && window.speechSynthesis) {
         window.speechSynthesis.cancel();
@@ -982,7 +2057,7 @@ function ReadingAppContent() {
     let pointsEarned = 1;
     let contentForHistory = currentContent;
 
-    if (mode === 'sentences' || mode === 'story') {
+    if (mode === 'sentences' || mode === 'story' || mode === 'avontuur') {
       pointsEarned = currentContent.trim().split(/\s+/).length;
     }
 
@@ -992,7 +2067,9 @@ function ReadingAppContent() {
       mode: mode,
       points: pointsEarned,
       storyProgress: { ...storyProgress },
-      showChapterEnd: showChapterEnd
+      showChapterEnd: showChapterEnd,
+      avontuurProgress: { ...avontuurProgress },
+      showAvontuurEnd: showAvontuurEnd
     }]);
 
     // Update Content based on Mode
@@ -1016,7 +2093,26 @@ function ReadingAppContent() {
          playSound('applause'); // <--- NU SPELEN ZE ALLEBEI!
          triggerConfetti('small');
        }
-    } 
+    }
+    else if (mode === 'avontuur') {
+       const av = AVONTUREN[avontuurProgress.avontuur];
+       const node = av.nodes[avontuurProgress.node];
+       const nextIndex = avontuurProgress.zinIndex + 1;
+
+       if (nextIndex < node.zinnen.length) {
+         // Volgende zin in deze node
+         setAvontuurProgress(prev => ({ ...prev, zinIndex: nextIndex }));
+         setCurrentContent(node.zinnen[nextIndex]);
+         playSound('click');
+       } else {
+         // Laatste zin van een einde-node → het avontuur is uit
+         // (keuze-nodes worden hierboven al afgevangen en komen hier niet)
+         setShowAvontuurEnd(true);
+         playSound('cheering');
+         playSound('applause');
+         triggerConfetti('small');
+       }
+    }
     else if (mode === 'words') {
       let pool = [...availableWords];
       if (pool.length === 0) pool = [...WOORDEN_LIJST]; 
@@ -1054,31 +2150,106 @@ function ReadingAppContent() {
       triggerConfetti('small');
     }
 
-  }, [mode, currentContent, availableWords, availableSentences, storyProgress, showChapterEnd, count, playSound]);
+  }, [mode, currentContent, availableWords, availableSentences, storyProgress, showChapterEnd, avontuurProgress, showAvontuurEnd, count, playSound]);
+
+  // Keuze maken in een avontuur: spring naar de gekozen node
+  const handleChoice = (keuze) => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+
+    const pointsEarned = keuze.tekst.trim().split(/\s+/).length;
+
+    // Geschiedenis bewaren zodat undo terug kan naar het keuzemoment
+    setHistory(prev => [...prev, {
+      content: currentContent,
+      mode: 'avontuur',
+      points: pointsEarned,
+      storyProgress: { ...storyProgress },
+      showChapterEnd: showChapterEnd,
+      avontuurProgress: { ...avontuurProgress },
+      showAvontuurEnd: showAvontuurEnd
+    }]);
+
+    const targetNode = AVONTUREN[avontuurProgress.avontuur].nodes[keuze.naar];
+    setAvontuurProgress(prev => ({ ...prev, node: keuze.naar, zinIndex: 0 }));
+    setCurrentContent(targetNode.zinnen[0]);
+
+    const oldScore = count;
+    const newScore = count + pointsEarned;
+    setCount(newScore);
+    if (Math.floor(newScore / 100) > Math.floor(oldScore / 100)) {
+      playSound('fanfare');
+      playSound('cheering');
+      triggerConfetti('big');
+    } else {
+      playSound('click');
+    }
+  };
+
+  // Avontuur opnieuw beginnen (vanaf het einde-scherm)
+  const restartAvontuur = (e) => {
+    e && e.stopPropagation();
+    if (audioCheering.current) { audioCheering.current.pause(); audioCheering.current.currentTime = 0; }
+    if (audioApplause.current) { audioApplause.current.pause(); audioApplause.current.currentTime = 0; }
+    const av = AVONTUREN[avontuurProgress.avontuur];
+    setAvontuurProgress({ avontuur: avontuurProgress.avontuur, node: av.start, zinIndex: 0 });
+    setShowAvontuurEnd(false);
+    setHistory([]);
+  };
+
+  // Kiezer: spring naar een specifiek verhaal of avontuur
+  const pickStory = (chapterIndex) => {
+    setMode('story');
+    setStoryProgress({ chapter: chapterIndex, sentenceIndex: 0 });
+    setShowChapterEnd(false);
+    setShowAvontuurEnd(false);
+    setHistory([]);
+    setCurrentContent(VERHALEN[chapterIndex].zinnen[0]);
+    setShowPicker(false);
+    playSound('click');
+  };
+
+  const pickAvontuur = (avontuurIndex) => {
+    setMode('avontuur');
+    const av = AVONTUREN[avontuurIndex];
+    setAvontuurProgress({ avontuur: avontuurIndex, node: av.start, zinIndex: 0 });
+    setShowAvontuurEnd(false);
+    setShowChapterEnd(false);
+    setHistory([]);
+    setCurrentContent(av.nodes[av.start].zinnen[0]);
+    setShowPicker(false);
+    playSound('click');
+  };
 
   const switchMode = (newMode) => {
     setMode(newMode);
     setHistory([]); // Clear history on mode switch to prevent complex state restoration issues
-    
+
     if (newMode === 'words') {
       setShowChapterEnd(false);
-      let pool = availableWords.length > 0 ? [...availableWords] : [...WOORDEN_LIJST];
+      setShowAvontuurEnd(false);
+      let pool = availableWords.length > 0 ? [...availableWords] : [...new Set(WOORDEN_LIJST)];
       setCurrentContent(pool[Math.floor(Math.random() * pool.length)]);
     } else if (newMode === 'sentences') {
       setShowChapterEnd(false);
+      setShowAvontuurEnd(false);
       let pool = availableSentences.length > 0 ? [...availableSentences] : [...ZINNEN_LIJST];
       setCurrentContent(pool[Math.floor(Math.random() * pool.length)]);
     } else if (newMode === 'story') {
-      // Load current story point
+      // Hervat het verhaal bij de laatst gelezen zin
+      setShowAvontuurEnd(false);
       const chap = VERHALEN[storyProgress.chapter];
       if(chap) {
-        // If we were at the end card, stay there, else show sentence
-        // Simplification: always resume at sentence unless we explicitly stored 'end' state
-        // Current logic resets end state on switch usually, let's check:
-        // logic below resets showChapterEnd to false implicitly unless we store it.
-        // We didn't store 'showChapterEnd' in persistent storage, only index.
-        // So we resume at the last read sentence index.
         setCurrentContent(chap.zinnen[storyProgress.sentenceIndex]);
+      }
+    } else if (newMode === 'avontuur') {
+      // Hervat het avontuur bij de laatst gelezen zin
+      setShowChapterEnd(false);
+      const av = AVONTUREN[avontuurProgress.avontuur];
+      const node = av?.nodes?.[avontuurProgress.node];
+      if (node) {
+        setCurrentContent(node.zinnen[avontuurProgress.zinIndex] || node.zinnen[0]);
       }
     }
   };
@@ -1091,13 +2262,18 @@ function ReadingAppContent() {
 
   const resetGame = (e) => {
     e.stopPropagation();
-    if (window.confirm("Wil je de teller en het verhaal resetten?")) {
-      setCount(0);
-      setHistory([]);
-      setStoryProgress({ chapter: 0, sentenceIndex: 0 });
-      setShowChapterEnd(false);
-      setShowConfetti(false);
-    }
+    setShowResetModal(true);
+  };
+
+  const confirmReset = () => {
+    setCount(0);
+    setHistory([]);
+    setStoryProgress({ chapter: 0, sentenceIndex: 0 });
+    setShowChapterEnd(false);
+    setAvontuurProgress({ avontuur: 0, node: AVONTUREN[0].start, zinIndex: 0 });
+    setShowAvontuurEnd(false);
+    setShowConfetti(false);
+    setShowResetModal(false);
   };
 
   // Start Screen
@@ -1175,10 +2351,63 @@ function ReadingAppContent() {
     );
   }
 
+  // Avontuur End Card
+  if (mode === 'avontuur' && showAvontuurEnd) {
+    const currentAv = AVONTUREN[avontuurProgress.avontuur];
+    return (
+       <div className={darkMode ? "dark" : ""}>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-purple-50 dark:bg-slate-900 p-4 font-sans transition-colors duration-300">
+           <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-2xl max-w-2xl w-full border-4 border-purple-200 dark:border-purple-900 text-center relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-purple-400"></div>
+
+              <Sparkles className="w-20 h-20 text-yellow-400 mx-auto mb-4 animate-bounce" />
+
+              <h2 className="text-3xl font-bold text-purple-700 dark:text-purple-300 mb-2">Avontuur Uit!</h2>
+              <h3 className="text-xl text-slate-600 dark:text-slate-400 mb-8">
+                "{currentAv.titel}"
+              </h3>
+
+              <p className="text-lg text-slate-600 dark:text-slate-300 mb-8">
+                Goed gelezen! Wat wil je nu doen?
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={restartAvontuur}
+                  className="flex-1 bg-purple-500 hover:bg-purple-600 text-white text-2xl font-bold py-4 px-6 rounded-xl shadow-[0_4px_0_rgb(126,34,206)] active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-2"
+                >
+                  <RefreshCw size={26} /> Nog een keer
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowPicker(true); }}
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-2xl font-bold py-4 px-6 rounded-xl shadow-[0_4px_0_rgb(29,78,216)] active:shadow-none active:translate-y-1 transition-all flex items-center justify-center gap-2"
+                >
+                  <List size={26} /> Kies avontuur
+                </button>
+              </div>
+           </div>
+
+           {/* Score still visible */}
+           <div className="mt-8 flex items-center gap-2 bg-white dark:bg-slate-800 px-6 py-2 rounded-full shadow-md">
+              <Star className="text-yellow-400 fill-yellow-400" size={24} />
+              <span className="text-2xl font-bold text-slate-700 dark:text-slate-200">{count}</span>
+           </div>
+        </div>
+       </div>
+    );
+  }
+
+  // Afgeleide waarden voor de avontuur-weergave
+  const huidigeAvNode = mode === 'avontuur'
+    ? AVONTUREN[avontuurProgress.avontuur]?.nodes?.[avontuurProgress.node]
+    : null;
+  const opKeuzeMoment = !!(huidigeAvNode && huidigeAvNode.keuzes &&
+    avontuurProgress.zinIndex >= huidigeAvNode.zinnen.length - 1);
+
   // Main Reading Interface
   return (
     <div className={darkMode ? "dark" : ""}>
-      <div 
+      <div
         onClick={handleTap}
         className="relative flex flex-col items-center justify-between min-h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden cursor-pointer touch-manipulation select-none transition-colors duration-300"
       >
@@ -1199,6 +2428,11 @@ function ReadingAppContent() {
             <button onClick={(e) => { e.stopPropagation(); setDarkMode(!darkMode); }} className="p-3 bg-white dark:bg-slate-800 rounded-full shadow hover:text-blue-500 text-slate-400 transition-colors">
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
+            {(mode === 'story' || mode === 'avontuur') && (
+              <button onClick={(e) => { e.stopPropagation(); setShowPicker(true); }} className="p-3 bg-white dark:bg-slate-800 rounded-full shadow hover:text-blue-500 text-slate-400 transition-colors" title="Kies een verhaal of avontuur">
+                <List size={20} />
+              </button>
+            )}
           </div>
           
           {/* Center Score & Undo */}
@@ -1226,7 +2460,8 @@ function ReadingAppContent() {
              {[
                { id: 'words', icon: Type, label: 'Woord' },
                { id: 'sentences', icon: BookOpen, label: 'Zin' },
-               { id: 'story', icon: Library, label: 'Verhaal' }
+               { id: 'story', icon: Library, label: 'Verhaal' },
+               { id: 'avontuur', icon: Sparkles, label: 'Avontuur' }
              ].map((m) => (
                <button
                  key={m.id}
@@ -1260,6 +2495,16 @@ function ReadingAppContent() {
            </div>
         )}
 
+        {/* AVONTUUR TITLE BAR */}
+        {mode === 'avontuur' && (
+           <div className="w-full max-w-3xl px-8 mt-2 z-10">
+              <div className="flex items-center justify-center gap-2 text-sm font-bold text-purple-400 dark:text-purple-300 uppercase tracking-wider">
+                 <Sparkles size={16} />
+                 <span>{AVONTUREN[avontuurProgress.avontuur].titel}</span>
+              </div>
+           </div>
+        )}
+
         {/* MAIN CONTENT CARD */}
         <div className="flex-1 flex flex-col items-center justify-center w-full z-10 px-4 py-8">
           <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-8 md:p-16 w-full max-w-4xl flex items-center justify-center border-b-8 border-slate-200 dark:border-slate-700 active:border-b-0 active:translate-y-2 transition-all duration-75 min-h-[300px] relative">
@@ -1287,9 +2532,32 @@ function ReadingAppContent() {
             </div>
           </div>
           
-          <p className="mt-12 text-slate-400 dark:text-slate-500 text-lg animate-pulse text-center">
-            {mode === 'story' ? 'Tik voor het vervolg...' : 'Tik voor de volgende...'}
-          </p>
+          {opKeuzeMoment ? (
+            <div className="mt-12 w-full max-w-2xl flex flex-col gap-3 px-2">
+              {huidigeAvNode.keuzes.map((keuze, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleChoice(keuze); }}
+                    className="flex-1 bg-green-500 hover:bg-green-600 text-white text-2xl md:text-3xl font-bold py-5 px-6 rounded-2xl shadow-[0_5px_0_rgb(21,128,61)] active:shadow-none active:translate-y-1 transition-all text-center break-words"
+                    style={{ fontFamily: 'Verdana, sans-serif' }}
+                  >
+                    {keuze.tekst}
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); speakText(keuze.tekst); }}
+                    className="bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full shadow-lg active:scale-95 transition-all shrink-0"
+                    title="Lees voor"
+                  >
+                    <Volume2 size={24} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-12 text-slate-400 dark:text-slate-500 text-lg animate-pulse text-center">
+              {(mode === 'story' || mode === 'avontuur') ? 'Tik voor het vervolg...' : 'Tik voor de volgende...'}
+            </p>
+          )}
         </div>
 
         {/* Confetti Effects */}
@@ -1340,13 +2608,139 @@ function ReadingAppContent() {
         
         {/* Reset Button (Bottom Right) */}
         <div className="absolute bottom-4 right-4 z-20">
-             <button 
+             <button
               onClick={resetGame}
               className="p-2 bg-white/50 dark:bg-slate-800/50 rounded-full hover:bg-red-100 text-slate-300 hover:text-red-500 transition-colors"
             >
               <RefreshCw size={20} />
             </button>
         </div>
+
+        {/* PICKER MODAL (verhaal / avontuur kiezen) */}
+        {showPicker && (
+          <div
+            onClick={(e) => { e.stopPropagation(); setShowPicker(false); }}
+            className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-lg w-full max-h-[80vh] flex flex-col overflow-hidden border-4 border-blue-200 dark:border-slate-700"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-slate-100 dark:border-slate-700">
+                <h2 className="text-2xl font-bold text-blue-600 dark:text-blue-300">Kies een verhaal</h2>
+                <button onClick={() => setShowPicker(false)} className="p-2 rounded-full text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700">
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="overflow-y-auto p-5 space-y-6">
+                {/* Avonturen */}
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-bold text-purple-400 dark:text-purple-300 uppercase tracking-wider mb-2">
+                    <Sparkles size={16} /> Avonturen (kies zelf)
+                  </p>
+                  <div className="space-y-2">
+                    {AVONTUREN.map((av, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => pickAvontuur(idx)}
+                        className={`w-full text-left px-4 py-3 rounded-xl font-bold text-lg transition-colors flex items-center justify-between
+                          ${mode === 'avontuur' && avontuurProgress.avontuur === idx
+                            ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-200'
+                            : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-200 hover:bg-purple-50 dark:hover:bg-slate-700'
+                          }`}
+                      >
+                        {av.titel}
+                        <ArrowRight size={20} className="text-purple-400 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Verhalen */}
+                <div>
+                  <p className="flex items-center gap-2 text-sm font-bold text-blue-400 dark:text-blue-300 uppercase tracking-wider mb-2">
+                    <Library size={16} /> Verhalen (met vraag)
+                  </p>
+                  <div className="space-y-2">
+                    {VERHALEN.map((v, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => pickStory(idx)}
+                        className={`w-full text-left px-4 py-3 rounded-xl font-bold text-lg transition-colors flex items-center justify-between
+                          ${mode === 'story' && storyProgress.chapter === idx
+                            ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-200'
+                            : 'bg-slate-50 dark:bg-slate-700/50 text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-slate-700'
+                          }`}
+                      >
+                        <span><span className="text-slate-400 mr-2">{idx + 1}.</span>{v.titel}</span>
+                        <ArrowRight size={20} className="text-blue-400 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* RESET MODAL */}
+        {showResetModal && (
+          <div
+            onClick={(e) => { e.stopPropagation(); setShowResetModal(false); }}
+            className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center border-4 border-red-200 dark:border-slate-700"
+            >
+              <AlertCircle size={56} className="text-red-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Opnieuw beginnen?</h2>
+              <p className="text-slate-600 dark:text-slate-300 mb-8">
+                Dit zet de punten op 0 en de verhalen weer aan het begin.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowResetModal(false)}
+                  className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3 px-4 rounded-xl hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
+                >
+                  Nee, laat maar
+                </button>
+                <button
+                  onClick={confirmReset}
+                  className="flex-1 bg-red-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-red-600 transition-colors"
+                >
+                  Ja, reset
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* BOOK END MODAL */}
+        {showBookEndModal && (
+          <div
+            onClick={(e) => { e.stopPropagation(); setShowBookEndModal(false); }}
+            className="absolute inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center border-4 border-yellow-200 dark:border-slate-700"
+            >
+              <Trophy size={64} className="text-yellow-400 mx-auto mb-4 animate-bounce" />
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Gefeliciteerd!</h2>
+              <p className="text-slate-600 dark:text-slate-300 mb-8">
+                Je hebt het hele boek uitgelezen! Wat knap.
+              </p>
+              <button
+                onClick={() => setShowBookEndModal(false)}
+                className="w-full bg-green-500 text-white text-xl font-bold py-3 px-4 rounded-xl hover:bg-green-600 transition-colors"
+              >
+                Hoera!
+              </button>
+            </div>
+          </div>
+        )}
 
         <style>{`
           @keyframes fall {
